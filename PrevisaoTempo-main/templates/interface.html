@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Previsão do Tempo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #a0c4ff, #ffffff);
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 500px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        h2 {
+            margin-bottom: 20px;
+        }
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4dabf7;
+            color: #fff;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #339af0;
+        }
+        .resultado {
+            margin-top: 20px;
+            text-align: left;
+            background: #f1f3f5;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .temp-max { color: #ff6b6b; font-weight: bold; }
+        .temp-min { color: #1c7ed6; font-weight: bold; }
+        .icone { font-size: 40px; margin-right: 10px; vertical-align: middle; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Previsão do Tempo</h2>
+        <input type="text" id="cidade" placeholder="Digite a cidade">
+        <input type="date" id="data">
+        <button onclick="buscarClima()">Ver Previsão</button>
+        <div class="resultado" id="resultado"></div>
+    </div>
+
+    <script>
+        function escolherIcone(temp, chuva) {
+            if (chuva > 50) return "🌧️";      // chuva forte
+            if (temp >= 28) return "☀️";       // quente
+            if (temp >= 18) return "⛅";       // ameno
+            return "❄️";                        // frio
+        }
+
+        async function buscarClima() {
+            const cidade = document.getElementById('cidade').value;
+            const data = document.getElementById('data').value;
+            let url = `/clima?cidade=${encodeURIComponent(cidade)}`;
+            if (data) url += `&data=${data}`;
+
+            const resultadoEl = document.getElementById('resultado');
+            resultadoEl.innerHTML = "Carregando...";
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                if (!res.ok) {
+                    resultadoEl.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    const tempMax = data.temperatura_maxima_c;
+                    const tempMin = data.temperatura_minima_c;
+                    const chuva = data.chance_de_chuva_percent;
+
+                    const icone = escolherIcone(tempMax, chuva);
+
+                    resultadoEl.innerHTML = `
+                        <h3>${icone} ${data.cidade_encontrada}</h3>
+                        <p><strong>Data:</strong> ${data.data}</p>
+                        <p><span class="temp-max">Máx: ${tempMax}°C</span> | <span class="temp-min">Mín: ${tempMin}°C</span></p>
+                        <p><strong>Chance de chuva:</strong> ${chuva}%</p>
+                    `;
+                }
+            } catch (err) {
+                resultadoEl.innerHTML = 'Erro ao conectar com a API.';
+            }
+        }
+    </script>
+</body>
+</html>
